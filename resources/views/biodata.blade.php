@@ -932,40 +932,23 @@
         <div class="timeline-list">
         {{-- Container daftar timeline; memiliki garis vertikal gradien sebagai pseudo-elemen ::before --}}
             <div class="t-event">
-            {{-- Event pertama dalam timeline; animasi masuk dari kiri dengan delay 0.2 detik --}}
-                <h3>SD Antonius Medan</h3>
-                {{-- Nama institusi pendidikan: Sekolah Dasar Antonius di Medan --}}
-                <div class="year">2005 – 2011</div>
-                {{-- Rentang tahun masuk (2005) dan lulus (2011) dari institusi ini --}}
+            <h3>SD Antonius Medan</h3>
+                <div class="year">2011 – 2017</div>
                 <span class="badge">Sekolah Dasar</span>
-                {{-- Badge pill biru dengan label tingkatan pendidikan "Sekolah Dasar" --}}
-            </div>
-            {{-- Penutup event pertama --}}
+                </div>
             <div class="t-event">
-            {{-- Event kedua dalam timeline; animasi dengan delay 0.35 detik --}}
-                <h3>SMP Putri Cahaya Medan</h3>
-                {{-- Nama institusi: SMP Putri Cahaya di Medan --}}
-                <div class="year">2011 – 2014</div>
-                {{-- Rentang tahun di sekolah menengah pertama --}}
-                <span class="badge">Sekolah Menengah Pertama</span>
-                {{-- Badge tingkatan "Sekolah Menengah Pertama" --}}
+            <h3>SMP Putri Cahaya Medan</h3>
+            <div class="year">2017 – 2020</div>
+            <span class="badge">Sekolah Menengah Pertama</span>
             </div>
-            {{-- Penutup event kedua --}}
             <div class="t-event">
-            {{-- Event ketiga dalam timeline; animasi dengan delay 0.5 detik --}}
                 <h3>SMA Negeri 4 Medan</h3>
-                {{-- Nama institusi: SMA Negeri 4 di Medan --}}
-                <div class="year">2014 – 2017</div>
-                {{-- Rentang tahun di sekolah menengah atas --}}
+                <div class="year">2020 – 2023</div>
                 <span class="badge">Sekolah Menengah Atas</span>
-                {{-- Badge tingkatan "Sekolah Menengah Atas" --}}
             </div>
-            {{-- Penutup event ketiga --}}
+            </div>
         </div>
-        {{-- Penutup .timeline-list --}}
-    </div>
-    {{-- Penutup kartu Timeline --}}
-
+        
 </div>
 {{-- Penutup .main (container dua kartu informasi) --}}
 
