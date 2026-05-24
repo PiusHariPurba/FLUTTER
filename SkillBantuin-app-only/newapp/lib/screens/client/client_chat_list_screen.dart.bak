@@ -1,0 +1,380 @@
+import 'package:flutter/material.dart';
+import '../../utils/language_notifier.dart';
+import '../../widgets/app_theme.dart';
+import '../../widgets/app_animations.dart';
+import 'client_chat_room_screen.dart';
+
+/// Chat List Screen untuk Client (nama: "Main Room Chat")
+/// Menampilkan daftar percakapan dengan freelancer.
+/// Design: pic 4 — "Messages"
+class ClientChatListScreen extends StatefulWidget {
+  const ClientChatListScreen({super.key});
+
+  @override
+  State<ClientChatListScreen> createState() => _ClientChatListScreenState();
+}
+
+class _ClientChatListScreenState extends State<ClientChatListScreen> {
+  final _searchCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    LanguageNotifier.instance.addListener(_onLang);
+  }
+
+  @override
+  void dispose() {
+    LanguageNotifier.instance.removeListener(_onLang);
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onLang() => setState(() {});
+
+  /// Data dummy percakapan sesuai desain
+  List<_ChatItemData> get _chats => const [
+        _ChatItemData(
+          name: 'Siti Aminah',
+          lastMessage: 'Halo, saya sudah menyelesaikan revi…',
+          time: '10:25',
+          unreadCount: 2,
+          isOnline: true,
+          avatarColor: Color(0xFF1B5E40),
+        ),
+        _ChatItemData(
+          name: 'Budi Santoso',
+          lastMessage: 'Terima kasih Pak, nanti saya kabari lagi pr…',
+          time: 'Kemarin',
+          unreadCount: 0,
+          isOnline: true,
+          avatarColor: Color(0xFF2E7D5E),
+        ),
+        _ChatItemData(
+          name: 'Maya Putri',
+          lastMessage: 'Sama-sama, senang bisa bekerjasama d…',
+          time: 'Rabu',
+          unreadCount: 0,
+          isOnline: true,
+          avatarColor: Color(0xFF34495E),
+        ),
+        _ChatItemData(
+          name: 'Andre Wijaya',
+          lastMessage: 'Bisa kita atur meeting untuk besok siang?',
+          time: '12 Jun',
+          unreadCount: 0,
+          isOnline: false,
+          avatarColor: Color(0xFF455A64),
+        ),
+        _ChatItemData(
+          name: 'Diana Lestari',
+          lastMessage: 'Draft proposal sudah saya kirim via email …',
+          time: '10 Jun',
+          unreadCount: 0,
+          isOnline: true,
+          avatarColor: Color(0xFF1A6B55),
+        ),
+      ];
+
+  @override
+  Widget build(BuildContext context) {
+    final isId = LanguageNotifier.instance.isIndonesian;
+
+    return Scaffold(
+      backgroundColor: FPal.bg,
+      body: SafeArea(
+        child: AnimatedPage(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── App Bar ─────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Row(
+                  children: [
+                    // Profile avatar kecil di kiri
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: FPal.primary, width: 2),
+                      ),
+                      child: ClipOval(
+                        child: Container(
+                          color: FPal.primaryLight,
+                          child: const Icon(Icons.person, color: FPal.primary, size: 22),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Logo "SkillBantuin"
+                    const Text(
+                      'SkillBantuin',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: FPal.ink,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // QR Code icon
+                    Icon(Icons.qr_code_scanner_rounded, color: FPal.ink, size: 20),
+                    const Spacer(),
+                    // Notification bell
+                    Icon(Icons.notifications_outlined, color: FPal.ink, size: 22),
+                  ],
+                ),
+              ),
+
+              // ── Garis hijau di bawah app bar ────────────────────
+              const SizedBox(height: 12),
+              Container(height: 2, color: FPal.primaryLight),
+              const SizedBox(height: 18),
+
+              // ── "Messages" Title ────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Messages',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: FPal.ink,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // ── Search Bar ──────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFDDE2EE)),
+                  ),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    decoration: InputDecoration(
+                      hintText: isId ? 'Cari percakapan...' : 'Search conversations...',
+                      hintStyle: const TextStyle(
+                        color: FPal.inkMuted,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      prefixIcon: const Icon(Icons.search_rounded, color: FPal.inkMuted, size: 22),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ── Chat List — slide dari kanan staggered ──────
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _chats.length,
+                  itemBuilder: (context, index) {
+                    return SlideInRight(
+                      delay: Duration(milliseconds: 200 + index * 100),
+                      duration: const Duration(milliseconds: 450),
+                      child: _ChatItem(
+                        data: _chats[index],
+                        onTap: () {
+                          // Navigasi ke chat room
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ClientChatRoomScreen(
+                                name: _chats[index].name,
+                                isOnline: _chats[index].isOnline,
+                                avatarColor: _chats[index].avatarColor,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  DATA MODELS & WIDGETS
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Data model untuk setiap chat item
+class _ChatItemData {
+  final String name;
+  final String lastMessage;
+  final String time;
+  final int unreadCount;
+  final bool isOnline;
+  final Color avatarColor;
+
+  const _ChatItemData({
+    required this.name,
+    required this.lastMessage,
+    required this.time,
+    required this.unreadCount,
+    required this.isOnline,
+    required this.avatarColor,
+  });
+}
+
+/// Widget satu chat item — avatar + online dot, nama, pesan terakhir, waktu, unread badge
+class _ChatItem extends StatelessWidget {
+  final _ChatItemData data;
+  final VoidCallback onTap;
+
+  const _ChatItem({required this.data, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Tap handler — efek scale saat ditekan
+        TapScale(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                // Avatar + online indicator
+                Stack(
+                  children: [
+                    // Avatar lingkaran
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: data.avatarColor.withOpacity(0.12),
+                        border: Border.all(
+                          color: data.avatarColor.withOpacity(0.25),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(Icons.person, color: data.avatarColor, size: 26),
+                    ),
+                    // Online dot — posisi kiri bawah
+                    if (data.isOnline)
+                      Positioned(
+                        bottom: 2,
+                        left: 2,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: FPal.success,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 14),
+
+                // Name + last message
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Row: Name + timestamp
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            data.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: data.unreadCount > 0
+                                  ? FontWeight.w900
+                                  : FontWeight.w700,
+                              color: FPal.ink,
+                            ),
+                          ),
+                          Text(
+                            data.time,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: data.unreadCount > 0
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: data.unreadCount > 0
+                                  ? FPal.primary
+                                  : FPal.inkMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Row: Last message + unread badge
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              data.lastMessage,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: data.unreadCount > 0
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: data.unreadCount > 0
+                                    ? FPal.ink
+                                    : FPal.inkMuted,
+                              ),
+                            ),
+                          ),
+                          // Unread count badge
+                          if (data.unreadCount > 0) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: FPal.primary,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  data.unreadCount.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Divider — garis tipis di bawah setiap item
+        Container(height: 1, color: const Color(0xFFF0EDE8)),
+      ],
+    );
+  }
+}

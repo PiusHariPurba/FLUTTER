@@ -1,0 +1,1 @@
+enum AuthFlowMode { login, register }

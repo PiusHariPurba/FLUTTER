@@ -1,0 +1,187 @@
+import 'task_models.dart';
+
+enum ChatStatus { sent, read, unread }
+enum ChatPartyRole { client, freelancer }
+enum ChatMessageType { text, negotiation, system, file, image }
+enum NegotiationStatus { pending, accepted, rejected, countered }
+
+class NegotiationData {
+  final String title;
+  final int reward;
+  final String deadline;
+  final NegotiationStatus status;
+  final List<String> actions;
+
+  const NegotiationData({
+    required this.title,
+    required this.reward,
+    required this.deadline,
+    required this.status,
+    required this.actions,
+  });
+}
+
+class ChatMessage {
+  final String id;
+  final ChatPartyRole sender;
+  final ChatMessageType type;
+  final String content;
+  final String timeLabel;
+  final ChatStatus status;
+  final NegotiationData? negotiation;
+  final String? attachment;
+  final String? senderId;
+
+  const ChatMessage({
+    required this.id,
+    required this.sender,
+    required this.type,
+    required this.content,
+    required this.timeLabel,
+    required this.status,
+    this.negotiation,
+    this.attachment,
+    this.senderId,
+  });
+
+  factory ChatMessage.fromApiJson(
+    Map<String, dynamic> json, {
+    required String myUserId,
+    required String clientId,
+  }) {
+    final senderIdStr = json['sender_id'].toString();
+    final isMine      = senderIdStr == myUserId;
+    final isClient    = senderIdStr == clientId;
+
+    ChatPartyRole senderRole = isClient
+        ? ChatPartyRole.client
+        : ChatPartyRole.freelancer;
+
+    ChatMessageType msgType = switch (json['type'] as String? ?? 'text') {
+      'file'  => ChatMessageType.file,
+      'image' => ChatMessageType.image,
+      _       => ChatMessageType.text,
+    };
+
+    ChatStatus chatStatus;
+    if (isMine) {
+      chatStatus = json['read_at'] != null ? ChatStatus.read : ChatStatus.sent;
+    } else {
+      chatStatus = json['read_at'] != null ? ChatStatus.read : ChatStatus.unread;
+    }
+
+    final dt = DateTime.tryParse(json['created_at'] as String? ?? '');
+    final timeLabel = dt != null
+        ? '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}'
+        : '';
+
+    return ChatMessage(
+      id:         json['id'].toString(),
+      senderId:   senderIdStr,
+      sender:     senderRole,
+      type:       msgType,
+      content:    (json['body'] ?? '') as String,
+      attachment: json['attachment'] as String?,
+      timeLabel:  timeLabel,
+      status:     chatStatus,
+    );
+  }
+}
+
+class ChatRoom {
+  final String id;
+  final String taskId;
+  final String taskTitle;
+  final String counterpartName;
+  final String counterpartRoleLabel;
+  final bool counterpartOnline;
+  final String lastMessage;
+  final String lastMessageTime;
+  final int unreadCount;
+  final TaskStatus taskStatus;
+  final List<ChatMessage> messages;
+  final String? counterpartAvatar;
+  final String? clientId;
+  final String? freelancerId;
+
+  const ChatRoom({
+    required this.id,
+    required this.taskId,
+    required this.taskTitle,
+    required this.counterpartName,
+    required this.counterpartRoleLabel,
+    required this.counterpartOnline,
+    required this.lastMessage,
+    required this.lastMessageTime,
+    required this.unreadCount,
+    required this.taskStatus,
+    required this.messages,
+    this.counterpartAvatar,
+    this.clientId,
+    this.freelancerId,
+  });
+
+  factory ChatRoom.fromApiJson(
+    Map<String, dynamic> json, {
+    required String myUserId,
+    required String myRole, // 'client' atau 'freelancer'
+  }) {
+    final client     = json['client']     as Map<String, dynamic>? ?? {};
+    final freelancer = json['freelancer'] as Map<String, dynamic>? ?? {};
+    final task       = json['task']       as Map<String, dynamic>? ?? {};
+
+    // Tentukan siapa "lawan bicara"
+    final bool isClient   = myRole == 'client';
+    final counterpart     = isClient ? freelancer : client;
+    final counterpartRole = isClient ? 'Freelancer' : 'Client';
+
+    // Parse pesan terakhir
+    final rawMsgs   = json['messages'] as List<dynamic>? ?? [];
+    final clientId  = client['id']?.toString() ?? '';
+    final messages  = rawMsgs.reversed
+        .map((m) => ChatMessage.fromApiJson(
+              m as Map<String, dynamic>,
+              myUserId: myUserId,
+              clientId: clientId,
+            ))
+        .toList();
+
+    final lastMsg       = messages.isNotEmpty ? messages.last : null;
+    final lastMsgBody   = lastMsg?.content ?? (lastMsg?.attachment != null ? '📎 File' : '');
+    final lastMsgTime   = lastMsg?.timeLabel ?? '';
+
+    return ChatRoom(
+      id:                   json['id'].toString(),
+      clientId:             clientId,
+      freelancerId:         freelancer['id']?.toString(),
+      taskId:               json['task_id']?.toString() ?? '',
+      taskTitle:            (task['title'] ?? 'Percakapan') as String,
+      counterpartName:      (counterpart['name'] ?? counterpartRole) as String,
+      counterpartRoleLabel: counterpartRole,
+      counterpartAvatar:    counterpart['avatar'] as String?,
+      counterpartOnline:    false,
+      lastMessage:          lastMsgBody,
+      lastMessageTime:      lastMsgTime,
+      unreadCount:          (json['unread_count'] as int?) ?? 0,
+      taskStatus:           taskStatusFromApi(task['status'] as String?),
+      messages:             messages,
+    );
+  }
+
+  ChatRoom copyWithMessages(List<ChatMessage> newMessages) => ChatRoom(
+        id:                   id,
+        taskId:               taskId,
+        taskTitle:            taskTitle,
+        counterpartName:      counterpartName,
+        counterpartRoleLabel: counterpartRoleLabel,
+        counterpartOnline:    counterpartOnline,
+        lastMessage:          newMessages.isNotEmpty ? newMessages.last.content : lastMessage,
+        lastMessageTime:      newMessages.isNotEmpty ? newMessages.last.timeLabel : lastMessageTime,
+        unreadCount:          0,
+        taskStatus:           taskStatus,
+        messages:             newMessages,
+        counterpartAvatar:    counterpartAvatar,
+        clientId:             clientId,
+        freelancerId:         freelancerId,
+      );
+}
